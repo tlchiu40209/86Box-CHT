@@ -2,7 +2,7 @@
 
 ---
 
-要下載預先編譯好 (For Windows x64) 的版本，請直接 Release 下載。  
+要下載預先編譯好 (For Windows x64) 的版本，請直接 [Release](https://github.com/tlchiu40209/86Box-CHT/releases) 下載。  
 解壓縮後即可使用。
 
 ![86BoxCHT](https://raw.githubusercontent.com/tlchiu40209/86Box-CHT/main/image/Screenshot.png "86Box Traditional Chinese Screenshot")
@@ -25,7 +25,7 @@
 - [86Box](http://86box.net/)
 - [86Box Github](https://github.com/86Box/86Box)
 
-本專案以中文化 86Box 介面為目的，無實質薪增其他功能。  
+本專案以中文化 86Box 介面為目的，無實質新增其他功能。  
 由於新增語言仍然需要修改部份原始碼檔案，才能使新增的繁體中文選項出現在選單中，並非直接新增一個語言檔案即可，故在繁體中文化尚未整合進 86Box 之前，請不要試圖 Merge，否則會發生沒有此語言選項的問題。
 
 ---
