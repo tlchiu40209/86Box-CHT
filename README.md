@@ -19,8 +19,8 @@
 目前 86Box 已由多個核心人員共同維護。
 
 關於 86Box 更多的說明請見:
--[86Box](http://86box.net/)
--[86Box Github](https://github.com/86Box/86Box)
+- [86Box](http://86box.net/)
+- [86Box Github](https://github.com/86Box/86Box)
 
 本專案以中文化 86Box 介面為目的，無實質薪增其他功能。  
 由於新增語言仍然需要修改部份原始碼檔案，才能使新增的繁體中文選項出現在選單中，並非直接新增一個語言檔案即可，故在繁體中文化尚未整合進 86Box 之前，請不要試圖 Merge，否則會發生沒有此語言選項的問題。
