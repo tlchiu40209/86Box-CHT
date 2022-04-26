@@ -17,8 +17,6 @@
  *		Copyright 2017-2020 Fred N. van Kempen.
  *		Copyright 2002-2020 The DOSBox Team.
  */
-#define _LARGEFILE_SOURCE
-#define _LARGEFILE64_SOURCE
 #define __STDC_FORMAT_MACROS
 #include <stdarg.h>
 #include <inttypes.h>
@@ -35,6 +33,7 @@
 #include <wchar.h>
 #define HAVE_STDARG_H
 #include <86box/86box.h>
+#include <86box/path.h>
 #include <86box/plat.h>
 #include <86box/cdrom_image_backend.h>
 
@@ -833,7 +832,7 @@ cdi_load_cue(cd_img_t *cdi, const char *cuefile)
 
     /* Get a copy of the filename into pathname, we need it later. */
     memset(pathname, 0, MAX_FILENAME_LENGTH * sizeof(char));
-    plat_get_dirname(pathname, cuefile);
+    path_get_dirname(pathname, cuefile);
 
     /* Open the file. */
     fp = plat_fopen(cuefile, "r");
@@ -988,7 +987,7 @@ cdi_load_cue(cd_img_t *cdi, const char *cuefile)
 
             if (!strcmp(type, "BINARY")) {
                 memset(temp, 0, MAX_FILENAME_LENGTH * sizeof(char));
-                plat_append_filename(filename, pathname, ansi);
+                path_append_filename(filename, pathname, ansi);
                 trk.file = track_file_init(filename, &error);
             }
             if (error) {

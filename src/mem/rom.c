@@ -33,6 +33,7 @@
 #include "cpu.h"
 #include <86box/mem.h>
 #include <86box/rom.h>
+#include <86box/path.h>
 #include <86box/plat.h>
 #include <86box/machine.h>
 #include <86box/m_xt_xi8088.h>
@@ -76,16 +77,16 @@ rom_add_path(const char* path)
     }
 
     // Save the path, turning it into absolute if needed.
-    if (!plat_path_abs((char*) path)) {
+    if (!path_abs((char*) path)) {
         plat_getcwd(cwd, sizeof(cwd));
-        plat_path_slash(cwd);
+        path_slash(cwd);
         snprintf(rom_path->path, sizeof(rom_path->path), "%s%s", cwd, path);
     } else {
         snprintf(rom_path->path, sizeof(rom_path->path), "%s", path);
     }
 
     // Ensure the path ends with a separator.
-    plat_path_slash(rom_path->path);
+    path_slash(rom_path->path);
 }
 
 
@@ -93,13 +94,13 @@ FILE *
 rom_fopen(char *fn, char *mode)
 {
     char temp[1024];
-    rom_path_t *rom_path = &rom_paths;
-    FILE *fp;
+    rom_path_t *rom_path;
+    FILE *fp = NULL;
 
     if (strstr(fn, "roms/") == fn) {
         /* Relative path */
-        for(rom_path_t *rom_path = &rom_paths; rom_path != NULL; rom_path = rom_path->next) {
-            plat_append_filename(temp, rom_path->path, fn + 5);
+        for (rom_path = &rom_paths; rom_path != NULL; rom_path = rom_path->next) {
+            path_append_filename(temp, rom_path->path, fn + 5);
 
             if ((fp = plat_fopen(temp, mode)) != NULL) {
                 return fp;
@@ -118,12 +119,12 @@ int
 rom_getfile(char *fn, char *s, int size)
 {
     char temp[1024];
-    rom_path_t *rom_path = &rom_paths;
+    rom_path_t *rom_path;
 
     if (strstr(fn, "roms/") == fn) {
         /* Relative path */
-        for(rom_path_t *rom_path = &rom_paths; rom_path != NULL; rom_path = rom_path->next) {
-            plat_append_filename(temp, rom_path->path, fn + 5);
+        for (rom_path = &rom_paths; rom_path != NULL; rom_path = rom_path->next) {
+            path_append_filename(temp, rom_path->path, fn + 5);
 
             if (rom_present(temp)) {
                 strncpy(s, temp, size);
@@ -138,7 +139,7 @@ rom_getfile(char *fn, char *s, int size)
             strncpy(s, fn, size);
             return 1;
         }
-        
+
         return 0;
     }
 }

@@ -1,0 +1,76 @@
+#
+# 86Box         A hypervisor and IBM PC system emulator that specializes in
+#               running old operating systems and software designed for IBM
+#               PC systems and compatibles from 1981 through fairly recent
+#               system designs based on the PCI bus.
+#
+#               This file is part of the 86Box distribution.
+#
+#               Recipe file for appimage-builder.
+#
+#
+# Authors:      RichardG, <richardg867@gmail.com>
+#
+#               Copyright 2022 RichardG.
+#
+
+version: 1
+AppDir:
+  path: ./archive_tmp
+  app_info:
+    id: !ENV 'net.${project_lower}.${project}'
+    name: !ENV '${project}'
+    icon: !ENV '${project_icon}'
+    version: !ENV '${project_version}'
+    exec: !ENV 'usr/local/bin/${project}'
+    exec_args: $@
+  apt:
+    arch: !ENV '${arch_deb}'
+    sources:
+    - sourceline: 'deb http://deb.debian.org/debian bullseye main'
+      key_url: 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x1f89983e0081fde018f3cc9673a4f27b8dd47936'
+    - sourceline: 'deb http://security.debian.org/debian-security bullseye-security main'
+      key_url: 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x1f89983e0081fde018f3cc9673a4f27b8dd47936'
+    - sourceline: 'deb http://deb.debian.org/debian bullseye-updates main'
+      key_url: 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xac530d520f2f3269f5e98313a48449044aad5c5d'
+    include:
+    - libevdev2
+    - libfluidsynth2
+    - libfreetype6
+    - libgbm1
+    - libgl1
+    - libgles2
+    - libglvnd0
+    - libglx0
+    - libgs9
+    - libpng16-16
+    - libqt5core5a
+    - libqt5gui5
+    - libqt5widgets5
+    - libslirp0
+    - libsndio7.0
+    - libwayland-client0
+    - libx11-6
+    - libx11-xcb1
+    - libxcb1
+    - libxcb-render0
+    - libxcb-shape0
+    - libxcb-shm0
+    - libxcb-xfixes0
+    - zlib1g
+  files:
+    exclude:
+    - etc
+    - lib/udev
+    - opt/libc/usr/share
+    - usr/[a-km-rt-zA-Z]*
+    - usr/lib/*/libasound.so.*
+    - usr/lib/*.a
+    - usr/lib/cmake
+    - usr/lib/pkgconfig
+    - usr/s[a-gi-zA-Z]*
+    - usr/share/[a-hj-zA-Z]*
+    - usr/share/i[a-bd-zA-Z]*
+    - var
+AppImage:
+  arch: !ENV '${arch_appimage}'

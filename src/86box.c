@@ -91,7 +91,9 @@
 #include <86box/snd_speaker.h>
 #include <86box/video.h>
 #include <86box/ui.h>
+#include <86box/path.h>
 #include <86box/plat.h>
+#include <86box/thread.h>
 #include <86box/version.h>
 #include <86box/gdbstub.h>
 
@@ -172,7 +174,6 @@ int	confirm_reset = 1;			/* (C) enable reset confirmation */
 int confirm_exit = 1;				/* (C) enable exit confirmation */
 int confirm_save = 1;				/* (C) enable save confirmation */
 int	enable_discord = 0;			/* (C) enable Discord integration */
-int	enable_crashdump = 0;			/* (C) enable crash dump */
 
 /* Statistics. */
 extern int mmuflush;
@@ -397,29 +398,35 @@ pc_init(int argc, char *argv[])
 {
 	char *ppath = NULL, *rpath = NULL;
 	char *cfg = NULL, *p;
-#if !defined(__APPLE__) && !defined(_WIN32)
-	char *appimage;
-#endif
 	char temp[2048];
 	struct tm *info;
 	time_t now;
-	int c, vmrp = 0;
+	int c;
 	int ng = 0, lvmp = 0;
+#ifdef _WIN32
 	uint32_t *uid, *shwnd;
+#endif
 	uint32_t lang_init = 0;
 
 	/* Grab the executable's full path. */
 	plat_get_exe_name(exe_path, sizeof(exe_path)-1);
-	p = plat_get_filename(exe_path);
+    p = path_get_filename(exe_path);
 	*p = '\0';
-
-#if !defined(_WIN32) && !defined(__APPLE__)
-    /* Grab the actual path if we are an AppImage. */
-    appimage = getenv("APPIMAGE");
-    if (appimage && (appimage[0] != '\0')) {
-        plat_get_dirname(exe_path, appimage);
+#if defined(__APPLE__)
+    c = strlen(exe_path);
+    if ((c >= 16) && !strcmp(&exe_path[c - 16], "/Contents/MacOS/")) {
+        exe_path[c - 16] = '\0';
+        p = path_get_filename(exe_path);
+	    *p = '\0';
     }
+#elif !defined(_WIN32)
+    /* Grab the actual path if we are an AppImage. */
+    p = getenv("APPIMAGE");
+    if (p && (p[0] != '\0'))
+        path_get_dirname(exe_path, p);
 #endif
+
+	path_slash(exe_path);
 
 	/*
 	 * Get the current working directory.
@@ -440,12 +447,11 @@ usage:
 			printf("\nUsage: 86box [options] [cfg-file]\n\n");
 			printf("Valid options are:\n\n");
 			printf("-? or --help         - show this information\n");
-#ifdef _WIN32
-			printf("-A or --crashdump    - enables crashdump on exception\n");
-#endif
 			printf("-C or --config path  - set 'path' to be config file\n");
 #ifdef _WIN32
 			printf("-D or --debug        - force debug output logging\n");
+#endif
+#if 0
 			printf("-E or --nographic    - forces the old behavior\n");
 #endif
 			printf("-F or --fullscreen   - start in fullscreen mode\n");
@@ -463,9 +469,6 @@ usage:
 			printf("-Z or --lastvmpath   - the last parameter is VM path rather than config\n");
 			printf("\nA config file can be specified. If none is, the default file will be used.\n");
 			return(0);
-		} else if (!strcasecmp(argv[c], "--vmrompath") ||
-			   !strcasecmp(argv[c], "-M")) {
-			vmrp = 1;
 		} else if (!strcasecmp(argv[c], "--lastvmpath") ||
 			   !strcasecmp(argv[c], "-Z")) {
 			lvmp = 1;
@@ -504,7 +507,7 @@ usage:
 			rom_add_path(rpath);
 		} else if (!strcasecmp(argv[c], "--config") ||
 			   !strcasecmp(argv[c], "-C")) {
-			if ((c+1) == argc) goto usage;
+			if ((c+1) == argc || plat_dir_check(argv[c + 1])) goto usage;
 
 			cfg = argv[++c];
 		} else if (!strcasecmp(argv[c], "--vmname") ||
@@ -519,9 +522,6 @@ usage:
 			   !strcasecmp(argv[c], "-N")) {
 			confirm_exit_cmdl = 0;
 #ifdef _WIN32
-		} else if (!strcasecmp(argv[c], "--crashdump") ||
-			   !strcasecmp(argv[c], "-A")) {
-			enable_crashdump = 1;
 		} else if (!strcasecmp(argv[c], "--hwnd") ||
 			   !strcasecmp(argv[c], "-H")) {
 
@@ -565,8 +565,8 @@ usage:
 
 	if (c != argc) goto usage;
 
-	plat_path_slash(usr_path);
-	plat_path_slash(rom_path);
+	path_slash(usr_path);
+	path_slash(rom_path);
 
 	/*
 	 * If the user provided a path for files, use that
@@ -575,7 +575,7 @@ usage:
 	 * make it absolute.
 	 */
 	if (ppath != NULL) {
-		if (! plat_path_abs(ppath)) {
+		if (! path_abs(ppath)) {
 			/*
 			 * This looks like a relative path.
 			 *
@@ -598,11 +598,11 @@ usage:
 	}
 
     // Add the VM-local ROM path.
-    plat_append_filename(temp, usr_path, "roms");
+    path_append_filename(temp, usr_path, "roms");
     rom_add_path(temp);
 
     // Add the standard ROM path in the same directory as the executable.
-    plat_append_filename(temp, exe_path, "roms");
+    path_append_filename(temp, exe_path, "roms");
     rom_add_path(temp);
 
     plat_init_rom_paths();
@@ -614,7 +614,7 @@ usage:
 	 * make it absolute.
 	 */
 	if (rpath != NULL) {
-		if (! plat_path_abs(rpath)) {
+		if (! path_abs(rpath)) {
 			/*
 			 * This looks like a relative path.
 			 *
@@ -649,7 +649,7 @@ usage:
 	 * This can happen when people load a config
 	 * file using the UI, for example.
 	 */
-	p = plat_get_filename(cfg);
+	p = path_get_filename(cfg);
 	if (cfg != p) {
 		/*
 		 * OK, the configuration file name has a
@@ -664,19 +664,19 @@ usage:
 		 * Otherwise, assume the pathname given is
 		 * relative to whatever the usr_path is.
 		 */
-		if (plat_path_abs(cfg))
+		if (path_abs(cfg))
 			strcpy(usr_path, cfg);
 		else
 			strcat(usr_path, cfg);
 	}
 
 	/* Make sure we have a trailing backslash. */
-	plat_path_slash(usr_path);
+	path_slash(usr_path);
 	if (rom_path[0] != '\0')
-		plat_path_slash(rom_path);
+		path_slash(rom_path);
 
 	/* At this point, we can safely create the full path name. */
-	plat_append_filename(cfg_path, usr_path, p);
+	path_append_filename(cfg_path, usr_path, p);
 
 	/*
 	 * Get the current directory's name
@@ -687,8 +687,8 @@ usage:
 	 */
 	if (strlen(vm_name) == 0) {
 		char ltemp[1024] = { '\0'};
-		plat_get_dirname(ltemp, usr_path);
-		strcpy(vm_name, plat_get_filename(ltemp));
+		path_get_dirname(ltemp, usr_path);
+		strcpy(vm_name, path_get_filename(ltemp));
 	}
 
 	/*
@@ -1177,7 +1177,7 @@ pc_close(thread_t *ptr)
 #ifdef __APPLE__
 static void _ui_window_title(void *s)
 {
-    ui_window_title((const wchar_t *) s);
+    ui_window_title((wchar_t *) s);
     free(s);
 }
 #endif
