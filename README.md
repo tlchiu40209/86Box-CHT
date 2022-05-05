@@ -30,7 +30,7 @@
 
 ---
 
-中文化 86Box 參照版本: [86Box 3.4.1 (c068ded)](https://github.com/86Box/86Box/commit/c068ded281968afa41c653683bfa5e82787f58f0)
+中文化 86Box 參照版本: [86Box 3.5 (b0b5d13)](https://github.com/86Box/86Box/commit/b0b5d135ccb7d1ee066d3bec5bb39009480fc5bd)
 
 編譯平台: Windows 7 x64 / Visual Studio 2015 (VC14) / MSYS2
 

@@ -97,6 +97,13 @@
 #include <86box/version.h>
 #include <86box/gdbstub.h>
 
+// Disable c99-designator to avoid the warnings about int ng
+#ifdef __clang__
+#if __has_warning("-Wunused-but-set-variable")
+#pragma clang diagnostic ignored "-Wunused-but-set-variable"
+#endif
+#endif
+
 
 /* Stuff that used to be globally declared in plat.h but is now extern there
    and declared here instead. */
@@ -417,7 +424,11 @@ pc_init(int argc, char *argv[])
     if ((c >= 16) && !strcmp(&exe_path[c - 16], "/Contents/MacOS/")) {
         exe_path[c - 16] = '\0';
         p = path_get_filename(exe_path);
-	    *p = '\0';
+        *p = '\0';
+    }
+    if (!strncmp(exe_path, "/private/var/folders/", 21)) {
+        ui_msgbox_header(MBX_FATAL, L"App Translocation", EMU_NAME_W L" cannot determine the emulated machine's location due to a macOS security feature. Please make a copy of the " EMU_NAME_W L" app and open that copy instead.");
+        return(0);
     }
 #elif !defined(_WIN32)
     /* Grab the actual path if we are an AppImage. */

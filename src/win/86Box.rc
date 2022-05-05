@@ -339,7 +339,6 @@ END
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 
-
 #include "languages/zh-TW.rc"
 #include "languages/zh-CN.rc"
 #include "languages/cs-CZ.rc"
